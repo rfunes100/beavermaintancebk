@@ -14,7 +14,7 @@ import { ValidationPipe } from './common/validation.pipe';
 import { CategoriasController } from './categoria/categoria.controller';
 import { CategoriasModule } from './categoria/categoria.module';
 import { UbicacionesModule } from './ubicaciones/ubicaciones.module';
-import { ProveedoresModule } from './proveedores/proveedores.MODULE';
+import { ProveedoresModule } from './proveedores/proveedores.module';
 import { ContratistasModule } from './contratistas/contratistas.module';
 import { SharePointModule } from './SharePoint/sharePoint.module';
 
