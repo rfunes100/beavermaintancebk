@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+// --- CATÁLOGOS PRINCIPALES ---
+model Ubicacion {
+  id               Int          @id @default(autoincrement())
+  nombre           String
+  direccion        String?      @db.Text
+  
+  // Jerarquía (Ubicación padre)
+  parentUbicacion  Ubicacion?   @relation("JerarquiaUbicacion", fields: [parentUbicacionId], references: [id])
+  parentUbicacionId Int?
+  childUbicaciones Ubicacion[]  @relation("JerarquiaUbicacion")
+
+  // Configuración de Mapa e Imagen
+  ponerEnMapa      Boolean      @default(false)
+  latitud          Float?
+  longitud         Float?
+  imagenUrl        String?      @db.Text
+
+  // Relaciones con lo que ya tienes
+  equipos          Equipo[]  @relation("UbicacionEquipos")
+  usuarios         Usuario[]    @relation("TrabajadoresEnUbicacion")
+  proveedores      Proveedor[]
+  contratistas     Contratista[]
+
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+}
+
+model Categoria {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?  @db.Text
+  equipos     Equipo[]
+  createdAt   DateTime @default(now())
+}
+
+model Departamento {
+  id          Int       @id @default(autoincrement())
+  nombre      String    @unique
+  descripcion String?   @db.Text
+  equipos     Equipo[]
+  usuarios    Usuario[]
+}
+
+model Contratista {
+  id          Int      @id @default(autoincrement())
+  nombre      String   @unique
+  descripcion String?
+  equipos     Equipo[]
+  ubicaciones Ubicacion[]
+  createdAt   DateTime @default(now())
+}
+
+model Proveedor {
+  id        Int      @id @default(autoincrement())
+  nombre    String   @unique
+  contacto  String?
+  equipos   Equipo[]
+  ubicaciones Ubicacion[]
+
+  createdAt DateTime @default(now())
+}
+
+// --- ENTIDADES PRINCIPALES ---
+
+model Equipo {
+  id               Int          @id @default(autoincrement())
+  nombre           String
+  tipo             TipoEquipo
+  numeroSerie      String       @unique
+  estado           EstadoEquipo @default(OPERATIVO)
+  
+  // Campos de Información
+  descripcion      String?      @db.Text
+  fabricante       String?
+  modelo           String?
+  potencia         String?
+  codigoBarras     String?      @unique
+  costoAdquisicion Float?
+  // Ubicación
+  ubicacionId Int?
+  ubicacion   Ubicacion? @relation("UbicacionEquipos", fields: [ubicacionId], references: [id])
+  area        String?
+  
+  // Seguimiento de uso
+  kmActuales       Float?       @default(0)
+  horasActuales    Float?       @default(0)
+  
+  // Asignaciones
+  trabajadorPrincipal   Usuario? @relation("TrabajadorPrincipal", fields: [trabajadorPrincipalId], references: [id])
+  trabajadorPrincipalId Int?
+
+  trabajadoresAdicionales Usuario[] @relation("TrabajadoresAdicionales")
+
+  equipoPadre           Equipo?  @relation("JerarquiaEquipo", fields: [equipoPadreId], references: [id])
+  equipoPadreId         Int?
+  subEquipos            Equipo[] @relation("JerarquiaEquipo")
+
+  // Más información y externos
+  contratista           Contratista? @relation(fields: [contratistaId], references: [id])
+  contratistaId         Int?
+
+  proveedor             Proveedor?   @relation(fields: [proveedorId], references: [id])
+  proveedorId           Int?
+
+  fechaPuestaServicio   DateTime?
+  fechaExpiracionGarantia DateTime?
+  informacionAdicional  String?      @db.Text
+
+  // Relaciones Base
+  departamento     Departamento @relation(fields: [departamentoId], references: [id])
+  departamentoId   Int
+
+  categoria        Categoria    @relation(fields: [categoriaId], references: [id])
+  categoriaId      Int
+  
+  planes           PlanMantenimiento[]
+  solicitudes      SolicitudMantenimiento[]
+  ordenesTrabajo   OrdenTrabajo[]
+  imagenes         ImagenEquipo[]
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+
+model Usuario {
+  id               Int      @id @default(autoincrement())
+  externoId        String   @unique
+  nombre           String
+  email            String   @unique
+  departamento     Departamento @relation(fields: [departamentoId], references: [id])
+  departamentoId   Int
+  
+  solicitudes      SolicitudMantenimiento[]
+  ordenesAsignadas OrdenTrabajo[]
+  
+
+  equiposPrincipales Equipo[] @relation("TrabajadorPrincipal")
+  equiposAdicionales Equipo[] @relation("TrabajadoresAdicionales")
+  ubicaciones Ubicacion[] @relation("TrabajadoresEnUbicacion")
+  
+}
+
+model ImagenEquipo {
+  id        Int      @id @default(autoincrement())
+  url       String   @db.Text
+  nombre    String?
+  equipo    Equipo   @relation(fields: [equipoId], references: [id])
+  equipoId  Int
+  createdAt DateTime @default(now())
+}
+
+// --- MANTENIMIENTO Y OPERACIONES ---
+
+model PlanMantenimiento {
+  id              Int      @id @default(autoincrement())
+  descripcion     String
+  frecuenciaDias  Int?
+  frecuenciaKm    Float?
+  frecuenciaHoras Float?
+  equipo          Equipo   @relation(fields: [equipoId], references: [id])
+  equipoId        Int
+}
+
+model SolicitudMantenimiento {
+  id            Int             @id @default(autoincrement())
+  descripcion   String          @db.Text
+  prioridad     Prioridad       @default(MEDIA)
+  estado        EstadoSolicitud @default(PENDIENTE)
+  fechaCreacion DateTime        @default(now())
+  
+  equipo        Equipo          @relation(fields: [equipoId], references: [id])
+  equipoId      Int
+  solicitante   Usuario         @relation(fields: [solicitanteId], references: [id])
+  solicitanteId Int
+  
+  ordenTrabajo  OrdenTrabajo?
+}
+
+model OrdenTrabajo {
+  id              Int               @id @default(autoincrement())
+  codigo          String            @unique
+  tipo            TipoMantenimiento
+  estado          EstadoOT          @default(ABIERTA)
+  descripcion     String            @db.Text
+  
+  fechaProgramada DateTime
+  fechaInicio     DateTime?
+  fechaFin        DateTime?
+  
+  lecturaKm       Float?
+  lecturaHoras    Float?
+  
+  equipo          Equipo            @relation(fields: [equipoId], references: [id])
+  equipoId        Int
+  responsable     Usuario           @relation(fields: [responsableId], references: [id])
+  responsableId   Int
+  
+  solicitud       SolicitudMantenimiento? @relation(fields: [solicitudId], references: [id])
+  solicitudId     Int? @unique
+
+  actividades     ActividadOT[]
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+}
+
+model ActividadOT {
+  id             Int          @id @default(autoincrement())
+  descripcion    String
+  realizada      Boolean      @default(false)
+  observaciones  String?      @db.Text
+  ordenTrabajo   OrdenTrabajo @relation(fields: [ordenTrabajoId], references: [id])
+  ordenTrabajoId Int
+}
+
+// --- ENUMS ---
+
+enum TipoEquipo {
+  MOBILIARIO
+  MAQUINARIA
+}
+
+enum EstadoEquipo {
+  OPERATIVO
+  EN_MANTENIMIENTO
+  DADO_DE_BAJA
+}
+
+enum Prioridad {
+  BAJA
+  MEDIA
+  ALTA
+  CRITICA
+}
+
+enum EstadoSolicitud {
+  PENDIENTE
+  APROBADA
+  RECHAZADA
+  EN_PROCESO
+}
+
+enum EstadoOT {
+  ABIERTA
+  EN_PROCESO
+  COMPLETADA
+  CANCELADA
+}
+
+enum TipoMantenimiento {
+  PREVENTIVO
+  CORRECTIVO
+}

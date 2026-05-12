@@ -1,0 +1,7 @@
+curl -X POST http://localhost:3000/equipos \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Mquina CNC",
+    "numeroSerie": "SN123456",
+    "departamentoId": 1
+  }'
