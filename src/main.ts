@@ -5,6 +5,7 @@ import { ValidationPipe } from './common/validation.pipe';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors();
   
   app.useGlobalPipes(new ValidationPipe());
 
@@ -32,6 +33,10 @@ async function bootstrap() {
   // 'api' es la ruta donde estará disponible la documentación (ej: http://localhost:3000/api)
   SwaggerModule.setup('api', app, document);
 
-  await app.listen(3000);
+  const port = process.env.PORT || 3000;
+
+await app.listen(port, '0.0.0.0');
+
+
 }
 bootstrap();
