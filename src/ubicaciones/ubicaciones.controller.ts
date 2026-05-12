@@ -5,7 +5,8 @@ import { ApiTags, ApiOperation, ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { CreateUbicacionDto, UpdateUbicacionDto } from './dto/ubicacion.dto';
 import { ValidationPipe } from '../common/validation.pipe';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { SharePointService } from '../SharePoint/sharepoint.service';
+import { SharePointService } from '../sharepoint/sharepoint.service';
+
 
 @ApiTags('Ubicaciones')
 @Controller('ubicaciones')

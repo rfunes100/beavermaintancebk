@@ -16,7 +16,7 @@ import { CategoriasModule } from './categoria/categoria.module';
 import { UbicacionesModule } from './ubicaciones/ubicaciones.module';
 import { ProveedoresModule } from './proveedores/proveedores.module';
 import { ContratistasModule } from './contratistas/contratistas.module';
-import { SharePointModule } from './SharePoint/sharepoint.module';
+import { SharePointModule } from './sharepoint/sharepoint.module';
 
 
 

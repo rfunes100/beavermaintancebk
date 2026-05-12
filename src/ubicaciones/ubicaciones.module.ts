@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
 import { UbicacionesController } from './ubicaciones.controller';
-import { SharePointModule } from '../SharePoint/sharepoint.module';
+import { SharePointModule } from '../sharepoint/sharepoint.module';
 
 @Module({
   imports: [PrismaModule, SharePointModule],
