@@ -2,8 +2,8 @@
 
 import { Module } from '@nestjs/common';
 import { HttpModule } from '@nestjs/axios';
-import { SharePointService } from './SharePoint.service';
-import { SharePointController } from './SharePoint.controller';
+import { SharePointService } from './sharepoint.service';
+import { SharePointController } from './sharepoint.controller';
 
 @Module({
   imports: [HttpModule],

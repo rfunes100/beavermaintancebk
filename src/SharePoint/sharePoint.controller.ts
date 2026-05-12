@@ -3,7 +3,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOperation, ApiProperty } from '@nestjs/swagger';
 import { FileUploadDto } from './dto/file-upload.dto';
 import { Response } from 'express';
-import { SharePointService } from './SharePoint.service';
+import { SharePointService } from './sharepoint.service';
 
 import { IsString, IsNotEmpty } from 'class-validator';
 
