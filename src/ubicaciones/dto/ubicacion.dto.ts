@@ -1,6 +1,6 @@
 import 'multer';
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsNumber, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsNumber, IsBoolean, IsInt } from 'class-validator';
 import { Type, Transform } from 'class-transformer';
 
 
@@ -21,6 +21,17 @@ export class CreateUbicacionDto {
   @IsOptional()
   @IsString()
   direccion?: string;
+
+
+  @ApiProperty({
+    description: 'ID de la ubicación a la que pertenece el departamento',
+    example: 10,
+    required: false,
+  })
+  @IsOptional()
+  @Type(() => Number) // Transforma el dato a número por seguridad
+  @IsInt({ message: 'El ID de la ubicación padre debe ser un número entero' })
+  parentUbicacionId?: number;
 
   @ApiProperty({ 
     description: 'Indica si se debe poner en el mapa',
@@ -78,6 +89,13 @@ export class UpdateUbicacionDto {
   @IsOptional()
   @IsString()
   nombre?: string;
+
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  parentUbicacionId?: number;
 
   @ApiProperty({ required: false })
   @IsOptional()

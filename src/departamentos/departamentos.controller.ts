@@ -47,7 +47,10 @@ export class DepartamentosController {
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar un departamento' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.prisma.departamento.delete({ where: { id } });
-  }
+   remove(@Param('id') id: string) {
+    return this.prisma.departamento.delete({ 
+      where: { id: Number(id) } 
+    });
+    }
+    
 }
