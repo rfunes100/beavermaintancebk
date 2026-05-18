@@ -6,14 +6,18 @@ import { plainToInstance } from 'class-transformer';
 export class ValidationPipe implements PipeTransform {
   async transform(value: any, metadata: ArgumentMetadata) {
     const { metatype } = metadata;
-    console.log('ValidationPipe value:', value);
-    console.log('ValidationPipe metatype:', metatype);
-    if (!metatype) {
+
+    // 1. Si no hay valor o no hay tipo que validar (como en un DELETE), pasar directo
+    if (!metatype || !this.toValidate(metatype) || value === undefined || value === null) {
       return value;
     }
+
+    // 2. Transformar el valor plano al objeto de la clase DTO
     const object = plainToInstance(metatype, value);
-    console.log('ValidationPipe transformed object:', object);
+    
+    // 3. Validar solo si el objeto resultante es válido para class-validator
     const errors = await validate(object);
+    
     if (errors.length > 0) {
       const messages = errors.map((err: ValidationError) => ({
         property: err.property,
@@ -24,6 +28,14 @@ export class ValidationPipe implements PipeTransform {
         errors: messages,
       });
     }
+    
     return object;
+  }
+
+  // FUNCIÓN CLAVE: Determina si el tipo es algo que se deba validar (un DTO)
+  // o si es un tipo simple (String, Number, etc.) que debe ignorarse
+  private toValidate(metatype: Function): boolean {
+    const types: Function[] = [String, Boolean, Number, Array, Object];
+    return !types.includes(metatype);
   }
 }

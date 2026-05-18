@@ -109,11 +109,52 @@ export class UbicacionesController {
 
   @Put(':id')
   @ApiOperation({ summary: 'Actualizar una ubicación' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FileInterceptor('imagen'))
   @ApiBody({ type: UpdateUbicacionDto })
   @UsePipes(ValidationPipe)
-  update(@Param('id', ParseIntPipe) id: number, @Body() data: UpdateUbicacionDto) {
-    return this.prisma.ubicacion.update({ where: { id }, data });
+  async update(
+  @Param('id', ParseIntPipe) id: number,
+  @Req() req: any,
+  @Body() data: UpdateUbicacionDto
+) {
+  const file = req.file; // Extraemos la nueva imagen si existe
+  let finalImagenUrl = undefined;
+
+  try {
+    // 1. Si el técnico subió una nueva foto/documento, lo mandamos a SharePoint
+    if (file) {
+      const year = new Date().getFullYear().toString();
+      const codigo = `UBC-EDIT-${id}`;
+      const categoria = 'Ubicaciones';
+
+      const sharePointResult = await this.sharepointService.uploadToMantenimiento(
+        file,
+        { year, codigo, categoria }
+      );
+      finalImagenUrl = sharePointResult.webUrl;
+    }
+
+    // 2. Quitamos campos basura que no van a Prisma
+    const { imagen, imagenUrl, ...restOfData } = data as any;
+
+    // 3. Preparamos el objeto final para la base de datos
+    const prismaData = {
+      ...restOfData,
+      // Solo actualizamos la URL si realmente se subió un archivo nuevo
+      ...(finalImagenUrl && { imagenUrl: finalImagenUrl }),
+    };
+
+    // 4. Ahora Prisma sí recibirá los datos correctos
+    return await this.prisma.ubicacion.update({
+      where: { id },
+      data: prismaData,
+    });
+  } catch (error: any) {
+    throw new BadRequestException(`Fallo al actualizar: ${error.message}`);
   }
+}
+
 
   @Delete(':id')
   @ApiOperation({ summary: 'Eliminar una ubicación' })
